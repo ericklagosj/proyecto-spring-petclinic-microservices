@@ -77,6 +77,15 @@ pipeline {
             }
         }
 
+        stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    sh 'docker-compose down'
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+
         stage('Deploy with Ansible') {
             steps {
                 script {
