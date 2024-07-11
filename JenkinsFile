@@ -30,17 +30,7 @@ pipeline {
             }
         }
         
-        stage ("imprimir variable de entorno del sistema"){
-            steps{
-                echo "${env.INSTAGRAM}"
-                echo "${INSTAGRAM}"
-                echo "$INSTAGRAM"
-                
-                sh "echo ${env.INSTAGRAM}"
-                sh "echo ${INSTAGRAM}"
-                sh "echo $INSTAGRAM"
-            }
-        }
+    
         
     }
 }
