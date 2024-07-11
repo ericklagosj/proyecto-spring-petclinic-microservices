@@ -35,13 +35,13 @@ pipeline {
     
     post {
         always {
-            // Puedes agregar acciones posteriores, como notificaciones o limpieza de recursos
+            echo 'Pipeline finalizado'
         }
         success {
-            // Acciones a realizar en caso de éxito
+            echo 'Pipeline exitoso'
         }
         failure {
-            // Acciones a realizar en caso de fallo
+            echo 'Pipeline fallido'
         }
     }
 }
