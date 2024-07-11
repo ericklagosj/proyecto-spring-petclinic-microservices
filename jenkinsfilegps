@@ -85,7 +85,8 @@ pipeline {
 
         stage('Monitoring Setup') {
             steps {
-                // Configuración de Grafana y Prometheus
+                echo 'Setup monitoring with Grafana and Prometheus'
+                // Aquí deberías agregar los comandos necesarios para la configuración de Grafana y Prometheus
             }
         }
     }
