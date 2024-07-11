@@ -9,7 +9,6 @@ pipeline {
         DOCKER_REGISTRY = 'your-docker-registry'
     }
 
-
     stages {
         stage('Checkout') {
             steps {
@@ -25,7 +24,14 @@ pipeline {
             }
         }
 
-        
+        stage('Test') {
+            steps {
+                script {
+                    sh './mvnw test'
+                }
+            }
+        }
+
         stage('Build Docker Images') {
             steps {
                 script {
@@ -41,7 +47,7 @@ pipeline {
                     for (service in services) {
                         def servicePath = "./spring-petclinic-${service}"
                         if (fileExists("${servicePath}/Dockerfile")) {
-                            docker.build("${env.DOCKER_REGISTRY}/${env.IMAGE_NAME}/${service}", servicePath)
+                            docker.build("${env.DOCKER_REGISTRY}/${service}", servicePath)
                         } else {
                             error("Dockerfile not found in ${servicePath}")
                         }
@@ -54,23 +60,55 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry("https://${DOCKER_REGISTRY}", "${DOCKER_CREDENTIALS_ID}") {
-                        sh 'docker-compose push'
+                        def services = [
+                            'config-server',
+                            'discovery-server',
+                            'customers-service',
+                            'visits-service',
+                            'vets-service',
+                            'api-gateway',
+                            'admin-server'
+                        ]
+                        for (service in services) {
+                            docker.image("${env.DOCKER_REGISTRY}/${service}").push()
+                        }
                     }
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy with Ansible') {
             steps {
                 script {
-                    sh 'docker-compose down'
-                    sh 'docker-compose up -d'
+                    // Asume que tienes un playbook de Ansible configurado para desplegar los contenedores Docker
+                    sh 'ansible-playbook -i your_inventory_file deploy.yml'
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Aplica los archivos de configuración de Kubernetes
+                    sh 'kubectl apply -f k8s/'
+                }
+            }
+        }
+
+        stage('Monitoring Setup') {
+            steps {
+                script {
+                    // Suponiendo que tienes configuraciones de Grafana y Prometheus listas para ser aplicadas
+                    sh 'kubectl apply -f monitoring/'
                 }
             }
         }
     }
 
     post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
         failure {
             mail to: 'you@example.com',
                  subject: "Pipeline failed: ${currentBuild.fullDisplayName}",
