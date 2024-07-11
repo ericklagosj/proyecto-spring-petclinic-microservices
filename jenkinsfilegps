@@ -35,6 +35,75 @@ pipeline {
                 }
             }
         }
+
+        stage('Test') {
+            steps {
+                script {
+                    sh './mvnw test'
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-admin-server ./spring-petclinic-admin-server'
+                    sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-api-gateway ./spring-petclinic-api-gateway'
+                    sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-config-server ./spring-petclinic-config-server'
+                    sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-customers-service ./spring-petclinic-customers-service'
+                    sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-discovery-server ./spring-petclinic-discovery-server'
+                    sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-vets-service ./spring-petclinic-vets-service'
+                    sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-visits-service ./spring-petclinic-visits-service'
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                script {
+                    sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY'
+                    sh 'docker push ${DOCKER_REGISTRY}/petclinic-admin-server'
+                    sh 'docker push ${DOCKER_REGISTRY}/petclinic-api-gateway'
+                    sh 'docker push ${DOCKER_REGISTRY}/petclinic-config-server'
+                    sh 'docker push ${DOCKER_REGISTRY}/petclinic-customers-service'
+                    sh 'docker push ${DOCKER_REGISTRY}/petclinic-discovery-server'
+                    sh 'docker push ${DOCKER_REGISTRY}/petclinic-vets-service'
+                    sh 'docker push ${DOCKER_REGISTRY}/petclinic-visits-service'
+                }
+            }
+        }
+
+        stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+
+        stage('Deploy with Ansible') {
+            steps {
+                script {
+                    sh 'ansible-playbook -i ansible/inventory ansible/deploy.yml'
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh 'kubectl apply -f k8s/'
+                }
+            }
+        }
+
+        stage('Monitoring Setup') {
+            steps {
+                script {
+                    // Configuración de Grafana y Prometheus
+                }
+            }
+        }
     }
 
     post {
