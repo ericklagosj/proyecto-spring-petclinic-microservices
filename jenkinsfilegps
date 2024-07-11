@@ -26,6 +26,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    echo "hola mundo"
                     // Aquí podrías agregar comandos para desplegar tu aplicación, por ejemplo, usando Docker, Ansible, etc.
                     // Ejemplo: sh "ansible-playbook deploy.yml"
                 }
