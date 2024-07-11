@@ -1,100 +1,47 @@
 pipeline {
     agent any
-
+    
     environment {
-        PATH = "C:/Program Files/Docker/Docker/resources/bin:$PATH"
-        DOCKER_CREDENTIALS_ID = 'docker-credentials-id'
-        GIT_REPO_URL = 'https://github.com/spring-petclinic/spring-petclinic-microservices'
-        GIT_BRANCH = 'main'
-        DOCKER_REGISTRY = 'your-docker-registry'
+        MAVEN_HOME = tool 'Maven 3.2.1'
+        JAVA_HOME = '/opt/java/openjdk'  // Asegúrate de usar la ruta correcta según tu instalación de Java
     }
-
+    
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${GIT_BRANCH}", url: "${GIT_REPO_URL}"
+                checkout scm
             }
         }
-
-        stage('Diagnose') {
-            steps {
-                sh 'whoami'
-                sh 'pwd'
-                sh 'ls -l'
-                sh 'echo $PATH'
-                sh 'which mvn || echo "mvn not found"'
-                sh './mvnw --version || echo "mvnw not found or not executable"'
-            }
-        }
-
+        
         stage('Build') {
             steps {
-                sh 'chmod +x mvnw' // Asegurar que mvnw tiene permisos de ejecución
-                sh './mvnw clean install'
+                script {
+                    def mavenHome = tool 'Maven 3.2.1'
+                    def mavenCmd = "${mavenHome}/bin/mvn"
+                    sh "${mavenCmd} clean install"
+                }
             }
         }
-
-        stage('Test') {
+        
+        stage('Deploy') {
             steps {
-                sh './mvnw test'
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-admin-server ./spring-petclinic-admin-server'
-                sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-api-gateway ./spring-petclinic-api-gateway'
-                sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-config-server ./spring-petclinic-config-server'
-                sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-customers-service ./spring-petclinic-customers-service'
-                sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-discovery-server ./spring-petclinic-discovery-server'
-                sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-vets-service ./spring-petclinic-vets-service'
-                sh 'docker build -t ${DOCKER_REGISTRY}/petclinic-visits-service ./spring-petclinic-visits-service'
-            }
-        }
-
-        stage('Push Docker Images') {
-            steps {
-                sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY'
-                sh 'docker push ${DOCKER_REGISTRY}/petclinic-admin-server'
-                sh 'docker push ${DOCKER_REGISTRY}/petclinic-api-gateway'
-                sh 'docker push ${DOCKER_REGISTRY}/petclinic-config-server'
-                sh 'docker push ${DOCKER_REGISTRY}/petclinic-customers-service'
-                sh 'docker push ${DOCKER_REGISTRY}/petclinic-discovery-server'
-                sh 'docker push ${DOCKER_REGISTRY}/petclinic-vets-service'
-                sh 'docker push ${DOCKER_REGISTRY}/petclinic-visits-service'
-            }
-        }
-
-        stage('Deploy with Docker Compose') {
-            steps {
-                sh 'docker-compose up -d'
-            }
-        }
-
-        stage('Deploy with Ansible') {
-            steps {
-                sh 'ansible-playbook -i ansible/inventory ansible/deploy.yml'
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                sh 'kubectl apply -f k8s/'
-            }
-        }
-
-        stage('Monitoring Setup') {
-            steps {
-                echo 'Setup monitoring with Grafana and Prometheus'
-                // Aquí deberías agregar los comandos necesarios para la configuración de Grafana y Prometheus
+                script {
+                    // Aquí podrías agregar comandos para desplegar tu aplicación, por ejemplo, usando Docker, Ansible, etc.
+                    // Ejemplo: sh "ansible-playbook deploy.yml"
+                }
             }
         }
     }
-
+    
     post {
+        always {
+            // Puedes agregar acciones posteriores, como notificaciones o limpieza de recursos
+        }
+        success {
+            // Acciones a realizar en caso de éxito
+        }
         failure {
-            echo "Pipeline failed. Check the Jenkins job for details."
-            // Elimina la sección de correo para evitar errores de conexión
+            // Acciones a realizar en caso de fallo
         }
     }
 }
