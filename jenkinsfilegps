@@ -22,8 +22,8 @@ pipeline {
                 sh 'pwd'
                 sh 'ls -l'
                 sh 'echo $PATH'
-                sh 'which mvn'
-                sh './mvnw --version'
+                sh 'which mvn || echo "mvn not found"'
+                sh './mvnw --version || echo "mvnw not found or not executable"'
             }
         }
 
@@ -93,9 +93,8 @@ pipeline {
 
     post {
         failure {
-            mail to: 'you@example.com',
-                 subject: "Pipeline failed: ${currentBuild.fullDisplayName}",
-                 body: "Something went wrong with the build. Please check the Jenkins job."
+            echo "Pipeline failed. Check the Jenkins job for details."
+            // Elimina la sección de correo para evitar errores de conexión
         }
     }
 }
